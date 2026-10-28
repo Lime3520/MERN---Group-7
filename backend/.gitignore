@@ -1,0 +1,18 @@
+# Installed Node.js dependencies
+node_modules/
+
+# Environment variables and secrets
+.env
+.env.*
+
+# Allow an example environment file to be committed
+!.env.example
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
