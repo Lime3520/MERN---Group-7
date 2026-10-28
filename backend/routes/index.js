@@ -1,4 +1,4 @@
-// Collects route groups and mounts them under the API prefix.
+// Organizes and mounts API routes under /api
 
 
 const express = require('express');
