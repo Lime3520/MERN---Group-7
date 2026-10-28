@@ -6,20 +6,26 @@ const bcrypt = require('bcryptjs');
 
 // User fields: MongoDB default _id, username, email, password, and createAt
 const userSchema = new mongoose.Schema({
-  username: {
+  username: { // Implements username constraints
     type: String,
-    required: true
+    required: true,
+    trim: true,     // Removes whitespace from beginning and end
+    minlength: 2,
+    maxlength: 30
   },
 
-  email: {
+  email: { // Normalize emails
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true    // Prevents nearly simultaneous registration requests from creating dupes
   },
 
   password: {
     type: String,
     required: true,
-    select: false
+    select: false   // Hide passwords from query by default
   },
 
   createdAt: {
