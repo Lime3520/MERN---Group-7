@@ -9,15 +9,15 @@ const mongoose = require('mongoose');
 require('dotenv').config(); // TO BE IMPLEMENTED
 
 // Import the ./routes file containing the different API endpoint actions (EX: Login/Registration)
-const apiRouter = require('./routes'); // TO BE IMPLEMENTED
+const apiRouter = require('./routes'); 
 
 // Import...
 // notFound ==> handles requests that don't match any registered route.
 // errorHandler ==> handles errors passed to Express's error-handling mechanism.
-const { notFound, errorHandler } = require('./middleware/errorHandler'); // TO BE IMPLEMENTED
+const { notFound, errorHandler } = require('./middleware/errorHandler'); 
 
 // Grab the Database URL from the .env file or default to localhost
-const url = (process.env.MONGODB_URI || 'mongodb://localhost:27017/REPLACEwithDBname'); // TO BE IMPLEMENTED
+const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/REPLACEwithDBname'; // TO BE IMPLEMENTED
 
 // ==================== Express Application ====================
 const app = express();
