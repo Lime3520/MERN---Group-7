@@ -3,6 +3,7 @@
 // Need the User.js schema, in order to know how to create one (Registration) and query for thier information (login)
 const User = require('../mongoosemodels/User');
 const validator = require('validator'); // Used to validate the REGEX format of emails
+const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login
 
 
 // POST /api/auth/register
@@ -56,7 +57,7 @@ exports.register = async (req, res, next) => {
         // !!! CREATE THE USER !!!
         const user = await User.create({username: username.trim(), email: email.trim(), password});
 
-        // TODO: Send the User a verification email and do not let them login until verified. (Should display this info to the User)
+        // ****** MAJOR TODO: Send the User a verification email and do not let them login until verified. (Should display this info to the User) ************
 
 
         // Return a successful creation response
@@ -108,11 +109,13 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({error: 'Invalid email or password'}); // Unauthorized
         }
 
-        // Implement authenticated session tokens
+        // Create an authenticated session token for the successfully logged in user.
+        const token = createToken(user);
 
         // Return safe user information when successful login (everything but password)
         return res.status(200).json({ // Success
             message: 'Login successful',
+            token, // Pass the authenticated session token
             user: {
                 id: user._id,
                 username: user.username,
