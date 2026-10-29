@@ -11,6 +11,9 @@ const { register } = require('../controllers/authController');
 // POST /api/auth/register
 router.post('/register', register);
 
+// POST /api/auth/login
+router.post('/login', login);
+
 // TEMPORARY: A test ping (GET) to ensure that the server runs and can access the auth.js route
 router.get('/test', (req, res) => {
   res.json({ message: 'Authentication routes are working' });
