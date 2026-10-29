@@ -1,12 +1,12 @@
 // Configures Express, connects to MongoDB, registers middleware and routes, and starts the server.
 
 
+// Loads the variables from our backend's .env file into process.env
+require('dotenv').config(); 
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
-// Loads the variables from our backend's .env file into process.env
-require('dotenv').config(); // TO BE IMPLEMENTED
 
 // Import the ./routes file containing the different API endpoint actions (EX: Login/Registration)
 const apiRouter = require('./routes'); 
@@ -17,7 +17,12 @@ const apiRouter = require('./routes');
 const { notFound, errorHandler } = require('./middleware/errorHandler'); 
 
 // Grab the Database URL from the .env file or default to localhost
-const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/REPLACEwithDBname'; // TO BE IMPLEMENTED
+const url = process.env.MONGODB_URI;
+
+// CHECK: If missing
+if (!url) {
+  throw new Error('MONGODB_URI is missing from the .env file');
+}
 
 // ==================== Express Application ====================
 const app = express();
