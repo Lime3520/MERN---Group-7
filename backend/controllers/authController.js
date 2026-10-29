@@ -108,6 +108,8 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({error: 'Invalid email or password'}); // Unauthorized
         }
 
+        // Implement authenticated session tokens
+
         // Return safe user information when successful login (everything but password)
         return res.status(200).json({ // Success
             message: 'Login successful',
@@ -122,6 +124,4 @@ exports.login = async (req, res, next) => {
     catch (err){
         next(err); // Pass unexpected errors to the middleware/errorHandler
     }
-
-
 }
