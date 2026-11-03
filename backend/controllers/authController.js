@@ -4,8 +4,9 @@
 const User = require('../mongoosemodels/User');
 const validator = require('validator'); // Used to validate the REGEX format of emails
 const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login (Stay logged in)
-const { generateToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
-
+const { generateToken, hashToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
+const { sendEmail } = require('../config/email'); // Used to send emails to the user through the Resend Service
+const { verificationEmail } = require('../utils/emailTemplates'); // Import the email template for verification email
 
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
@@ -73,10 +74,22 @@ exports.register = async (req, res, next) => {
             emailVerificationExpires: verificationExpires
         });
 
+        //Send verification email using rawToken.
+        // Build the verification URL.
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(rawToken)}`;
+
+        // Generate the email subject and content.
+        const email = verificationEmail(verificationUrl);
+
+        // Send the verification email.
+        await sendEmail({
+            to: user.email,
+            subject: email.subject,
+            html: email.html,
+            text: email.text
+        });
+
         
-        // TODO: Send verification email using rawToken.
-
-
         // Return a successful creation response
         return res.status(201).json({ // Resource Created
             message: "Account registration successful!",
@@ -92,6 +105,59 @@ exports.register = async (req, res, next) => {
         next(err); // Pass unexpected errors to the middleware/errorHandler
     }
 };
+
+
+// POST /api/auth/verify-email
+// This is the endpoint that gets called when someone clicks the verification link in thier email.
+exports.verifyEmail = async (req, res, next) => {
+    try {
+        const { token } = req.body || {};
+
+        // Validate the token.
+        if (!token || typeof token !== 'string') {
+            return res.status(400).json({
+                error: 'Verification token is required'
+            });
+        }
+
+        // Hash the incoming token.
+        const hashedToken = hashToken(token);
+
+        // Find a user with a matching, unexpired verification token.
+        const user = await User.findOne({
+            emailVerificationToken: hashedToken,
+            emailVerificationExpires: { $gt: new Date() }
+        }).select('+emailVerificationToken +emailVerificationExpires');
+
+        // Reject invalid or expired tokens.
+        if (!user) {
+            return res.status(400).json({
+                error: 'Invalid or expired verification token'
+            });
+        }
+
+        // Mark the account as verified ==> Allowed to Login now.
+        user.emailVerified = true;
+
+        // Remove/invalidate the token so it cannot be reused.
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+
+        await user.save(); // Update the user
+
+        return res.status(200).json({
+            message: 'Email successfully verified'
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+
+
+
 
 
 

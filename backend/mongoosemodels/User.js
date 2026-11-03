@@ -59,6 +59,18 @@ const userSchema = new mongoose.Schema({
   }
 });
 
+// Time To Live (TTL) Index
+// Automatically delete unverified accounts when their email verification expiration date is reached.
+userSchema.index(
+  { emailVerificationExpires: 1 }, // Ascending order
+  {
+    expireAfterSeconds: 0, // eligible for deletion as soon as its emailVerificationExpires date is reached.
+    partialFilterExpression: { // apply this TTL index only to documents where emailVerified is false.
+      emailVerified: false
+    }
+  }
+);
+
 // Hash the password before saving a new or changed password.
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return; // Skip hasing if password is unchanged
