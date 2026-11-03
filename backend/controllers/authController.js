@@ -3,7 +3,8 @@
 // Need the User.js schema, in order to know how to create one (Registration) and query for thier information (login)
 const User = require('../mongoosemodels/User');
 const validator = require('validator'); // Used to validate the REGEX format of emails
-const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login
+const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login (Stay logged in)
+const { generateToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
 
 
 // POST /api/auth/register
@@ -52,12 +53,28 @@ exports.register = async (req, res, next) => {
             return res.status(409).json({error: 'An account with this email already exists'}); // Resource Conflict
         }
 
+        // Generate a secure verification token.
+        const { rawToken, hashedToken } = generateToken();
+
+        // Set verification token expiration to 24 hours from now.
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         // If the request passes all of those conditions...
         // !!! CREATE THE USER !!!
-        const user = await User.create({username: username.trim(), email: email.trim(), password});
+        const user = await User.create({
+            // Standard User info
+            username: username.trim(), 
+            email: email.trim(), 
+            password,
 
-        // ****** MAJOR TODO: Send the User a verification email and do not let them login until verified. (Should display this info to the User) ************
+            // Email Verification Token Info
+            emailVerified: false,
+            emailVerificationToken: hashedToken,
+            emailVerificationExpires: verificationExpires
+        });
+
+        
+        // TODO: Send verification email using rawToken.
 
 
         // Return a successful creation response
