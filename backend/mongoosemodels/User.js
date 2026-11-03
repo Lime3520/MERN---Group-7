@@ -28,6 +28,31 @@ const userSchema = new mongoose.Schema({
     select: false   // Hide passwords from query by default
   },
 
+  emailVerified: { // Account has or has not been verified by email by the user after creation
+  type: Boolean,
+  default: false
+  },
+
+  emailVerificationToken: { // Store hashed token associated with account until verification
+    type: String,
+    select: false
+  },
+
+  emailVerificationExpires: { // Store the expiration timestamp for this token
+    type: Date,
+    select: false
+  },
+
+  passwordResetToken: { // Store hashed token associated with account until verification
+    type: String,
+    select: false
+  },
+
+  passwordResetExpires: { // Store the expiration timestamp for this token
+    type: Date,
+    select: false
+  },
+
   createdAt: {
     type: Date,
     default: Date.now
