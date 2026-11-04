@@ -192,6 +192,11 @@ exports.login = async (req, res, next) => {
             return res.status(401).json({error: 'Invalid email or password'}); // Unauthorized
         }
 
+        // CHECK: Ensure the user's email has been verified
+        if (!user.emailVerified) {
+            return res.status(403).json({ error: 'You must verify your email before logging in'}); // Forbidden
+        }
+
         // Create an authenticated session token for the successfully logged in user.
         const token = createToken(user);
 
