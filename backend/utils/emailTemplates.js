@@ -46,3 +46,53 @@ exports.verificationEmail = (verificationUrl) => {
         `
     };
 };
+
+
+
+
+exports.passwordResetEmail = (resetUrl) => {
+    return {
+        subject: 'Reset your password',
+
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+                <h2>Password Reset Request</h2>
+
+                <p>We received a request to reset your password.</p>
+
+                <p>Click the button below to choose a new password:</p>
+
+                <a
+                    href="${resetUrl}"
+                    style="
+                        display: inline-block;
+                        padding: 12px 20px;
+                        background-color: #2563eb;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 6px;
+                    "
+                >
+                    Reset Password
+                </a>
+
+                <p>This link expires in 30 minutes.</p>
+
+                <p>If you did not request a password reset, you can ignore this email.</p>
+            </div>
+        `,
+
+        text: `
+            Password Reset Request
+
+            We received a request to reset your password.
+
+            Reset your password using this link:
+            ${resetUrl}
+
+            This link expires in 30 minutes.
+
+            If you did not request a password reset, you can ignore this email.
+        `
+    };
+};

@@ -6,7 +6,7 @@ const validator = require('validator'); // Used to validate the REGEX format of 
 const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login (Stay logged in)
 const { generateToken, hashToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
 const { sendEmail } = require('../config/email'); // Used to send emails to the user through the Resend Service
-const { verificationEmail } = require('../utils/emailTemplates'); // Import the email template for verification email
+const { verificationEmail, passwordResetEmail } = require('../utils/emailTemplates'); // Import the email template for verification email
 
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
@@ -155,6 +155,128 @@ exports.verifyEmail = async (req, res, next) => {
 };
 
 
+
+
+
+// POST /api/auth/forgot-password
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        // Get email from JSON request body.
+        const { email } = req.body || {};
+
+        // CHECK: Reject requests that omit a valid email.
+        if (typeof email !== 'string' || !email.trim()) {
+            return res.status(400).json({error: 'Email is required'});
+        }
+
+        // Normalize and validate the email.
+        const normalizedEmail = email.trim().toLowerCase();
+
+        if (!validator.isEmail(normalizedEmail)) {
+            return res.status(400).json({error: 'Please provide a valid email address'});
+        }
+
+        // Find the account associated with the email.
+        const user = await User.findOne({email: normalizedEmail});
+
+        // Generic response prevents revealing whether an account exists.
+        const successMessage = {message: 'If an eligible account exists, a password reset email has been sent.'};
+
+        // If no account exists or the account is unverified,
+        // return the same generic response.
+        if (!user || !user.emailVerified) {
+            return res.status(200).json(successMessage);
+        }
+
+        // Generate a secure password reset token.
+        const { rawToken, hashedToken } = generateToken();
+
+        // Set password reset expiration to 30 minutes from now.
+        const resetExpires = new Date(Date.now() + 30 * 60 * 1000);
+
+        // Store the hashed token and its expiration.
+        user.passwordResetToken = hashedToken;
+        user.passwordResetExpires = resetExpires;
+
+        await user.save();
+
+        // Build the password reset URL.
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(rawToken)}`;
+
+        // Generate the password reset email content.
+        const emailContent = passwordResetEmail(resetUrl);
+
+        // Send the password reset email through Resend.
+        await sendEmail({
+            to: user.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text
+        });
+
+        // Return a generic success response.
+        return res.status(200).json(successMessage);
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+
+
+
+// POST /api/auth/reset-password
+exports.resetPassword = async (req, res, next) => {
+    try {
+        // Get reset token and new password from request body.
+        const { token, password } = req.body || {};
+
+        // CHECK: Reject requests missing required fields.
+        if (typeof token !== 'string' || !token ||
+            typeof password !== 'string' || !password) {
+
+            return res.status(400).json({error: 'Reset token and new password are required'});
+        }
+
+        // CHECK: Password must be at least 8 characters.
+        if (password.length < 8) {
+            return res.status(400).json({error: 'Password must be at least 8 characters long'});
+        }
+
+        // Hash the incoming reset token.
+        const hashedToken = hashToken(token);
+
+        // Find a user with a matching, unexpired reset token.
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: new Date() }
+        }).select('+passwordResetToken +passwordResetExpires');
+
+        // Reject invalid or expired reset tokens.
+        if (!user) {
+            return res.status(400).json({
+                error: 'Invalid or expired password reset token'
+            });
+        }
+
+        // Replace the user's password.
+        user.password = password;
+
+        // Remove/invalidate the reset token so it cannot be reused.
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        // Save the updated user.
+        // The User.js pre-save middleware automatically hashes the password.
+        await user.save();
+
+        return res.status(200).json({message: 'Password successfully reset'});
+
+    } catch (err) {
+        next(err);
+    }
+};
 
 
 
