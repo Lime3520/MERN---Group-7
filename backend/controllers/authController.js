@@ -79,14 +79,14 @@ exports.register = async (req, res, next) => {
         const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(rawToken)}`;
 
         // Generate the email subject and content.
-        const email = verificationEmail(verificationUrl);
+        const emailContent = verificationEmail(verificationUrl);
 
         // Send the verification email.
         await sendEmail({
             to: user.email,
-            subject: email.subject,
-            html: email.html,
-            text: email.text
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text
         });
 
         
