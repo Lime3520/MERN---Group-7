@@ -1,0 +1,86 @@
+// Defines the Mongoose user model and its schema. TEMPORARY waiting on actual DB info
+
+
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+// User fields: MongoDB default _id, username, email, password, and createAt
+const userSchema = new mongoose.Schema({
+  username: { // Implements username constraints
+    type: String,
+    required: true,
+    trim: true,     // Removes whitespace from beginning and end
+    minlength: 2,
+    maxlength: 30
+  },
+
+  email: { // Normalize emails
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true    // Prevents nearly simultaneous registration requests from creating dupes
+  },
+
+  password: {
+    type: String,
+    required: true,
+    select: false   // Hide passwords from query by default
+  },
+
+  emailVerified: { // Account has or has not been verified by email by the user after creation
+  type: Boolean,
+  default: false
+  },
+
+  emailVerificationToken: { // Store hashed token associated with account until verification
+    type: String,
+    select: false
+  },
+
+  emailVerificationExpires: { // Store the expiration timestamp for this token
+    type: Date,
+    select: false
+  },
+
+  passwordResetToken: { // Store hashed token associated with account until verification
+    type: String,
+    select: false
+  },
+
+  passwordResetExpires: { // Store the expiration timestamp for this token
+    type: Date,
+    select: false
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Time To Live (TTL) Index
+// Automatically delete unverified accounts when their email verification expiration date is reached.
+userSchema.index(
+  { emailVerificationExpires: 1 }, // Ascending order
+  {
+    expireAfterSeconds: 0, // eligible for deletion as soon as its emailVerificationExpires date is reached.
+    partialFilterExpression: { // apply this TTL index only to documents where emailVerified is false.
+      emailVerified: false
+    }
+  }
+);
+
+// Hash the password before saving a new or changed password.
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return; // Skip hasing if password is unchanged
+
+  this.password = await bcrypt.hash(this.password, 12); // Else, hash
+});
+
+// Function to compare a submitted password against the stored password hash.
+userSchema.methods.checkPassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);
