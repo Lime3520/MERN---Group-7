@@ -1,4 +1,4 @@
-const { getGeminiClient } = require('../config/gemini');
+const { getGeminiClient, generateWithFallback } = require('../config/gemini');
 const { compactWardrobe, outfitResponseSchema, validateOutfitResponse } = require('../utils/outfitGeneration');
 
 // Optional client injection lets tests run without making paid Gemini calls.
@@ -13,8 +13,7 @@ exports.generateOutfits = async (items, preferences, client) => {
   const ai = client || await getGeminiClient();
   let response;
   try {
-    response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+    response = await generateWithFallback(ai, {
       contents: JSON.stringify({ preferences, wardrobe }),
       config: {
         systemInstruction: [
@@ -37,7 +36,8 @@ exports.generateOutfits = async (items, preferences, client) => {
         httpOptions: { timeout: 30000 }
       }
     });
-  } catch {
+  } catch (cause) {
+    if (cause.statusCode === 503) throw cause;
     const error = new Error('Gemini could not generate outfits. Please try again.');
     error.statusCode = 502;
     throw error;

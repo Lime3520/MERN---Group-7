@@ -1,0 +1,24 @@
+.clothing-analyzer { max-width: 1120px; margin: 0 auto; padding: 40px 24px; color: #242424; }
+.clothing-analyzer h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: 12px 0; }
+.clothing-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .8rem; }
+.clothing-note { color: #626262; font-size: .9rem; line-height: 1.6; }
+.clothing-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
+.clothing-panel { min-width: 0; border: 1px solid #ddd; border-radius: 12px; padding: 24px; }
+.clothing-panel h2 { font-size: 1.25rem; margin-top: 0; }
+.clothing-file { display: grid; gap: 12px; }
+.clothing-file input { max-width: 100%; font: inherit; }
+.clothing-analyzer button { font: inherit; padding: 12px 18px; border: 1px solid #242424; border-radius: 999px; background: white; color: #242424; cursor: pointer; }
+.clothing-analyzer button:disabled { opacity: .5; cursor: not-allowed; }
+.clothing-analyzer button:focus-visible, .clothing-analyzer summary:focus-visible { outline: 3px solid #54755a; outline-offset: 3px; }
+.clothing-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.clothing-panel img, .clothing-panel video { display: block; width: 100%; max-height: 360px; object-fit: contain; background: #f5f5f5; border-radius: 8px; }
+.clothing-placeholder { padding: 56px 24px; background: #f5f5f5; border-radius: 8px; line-height: 1.6; text-align: center; }
+.clothing-filename { overflow-wrap: anywhere; font-size: .9rem; }
+.clothing-analyzer .clothing-primary { background: #242424; color: white; margin-top: 20px; width: 100%; }
+.clothing-error { color: #a12323; line-height: 1.6; }
+.clothing-panel dl > div { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid #eee; }
+.clothing-panel dt { text-transform: capitalize; color: #626262; }
+.clothing-panel dd { margin: 0; overflow-wrap: anywhere; }
+.clothing-panel summary { cursor: pointer; padding: 12px 0; }
+.clothing-panel pre { overflow: auto; max-height: 460px; padding: 16px; background: #f5f5f5; border-radius: 8px; font-size: .8rem; line-height: 1.6; }
+@media (max-width: 760px) { .clothing-layout { grid-template-columns: 1fr; } .clothing-analyzer { padding: 24px 16px; } .clothing-panel { padding: 18px; } }

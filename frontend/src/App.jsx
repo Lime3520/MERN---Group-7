@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import TopNav from './components/topNav.jsx';
 import Body from './components/body.jsx';
 import BodyScanner from './components/BodyScanner.jsx';
+import ClothingAnalyzer from './components/ClothingAnalyzer.jsx';
 import './App.css';
 
 function App() {
@@ -78,6 +79,10 @@ function App() {
                 </section>
             </main>
         );
+    }
+
+    if (currentPath === '/clothing-analysis') {
+        return <><TopNav /><ClothingAnalyzer /></>;
     }
 
     if (currentPath === '/scanner' && !sessionStorage.getItem('authToken')) {

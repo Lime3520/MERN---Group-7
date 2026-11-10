@@ -14,6 +14,7 @@ function TopNav({ initialAuthMode = null }) {
                 </a>
 
                 <div className="nav-links">
+                    <a href="/clothing-analysis">Analyze clothing</a>
                     <a href="/explore">Explore</a>
                     <a href="/shop">Shop</a>
                 </div>

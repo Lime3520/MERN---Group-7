@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './authModal.css';
 
-function AuthModal({ mode, onClose, onSwitch }) {
+function AuthModal({ mode, onClose, onSwitch, redirectTo = '/scanner' }) {
     const dialogRef = useRef(null);
     const isSignup = mode === 'signup';
     const [error, setError] = useState('');
@@ -64,7 +64,7 @@ function AuthModal({ mode, onClose, onSwitch }) {
                 }
 
                 sessionStorage.setItem('authToken', result.token);
-                window.location.assign('/scanner');
+                window.location.assign(redirectTo);
             }
         } catch (requestError) {
             setError(
