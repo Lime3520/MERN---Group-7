@@ -28,6 +28,20 @@ exports.errorHandler = (err, req, res, next) => {
     return res.status(409).json({ error: 'Resource already exists' });
   }
 
+  // File upload errors, including the 10 MB clothing image limit
+  if (err.name === 'MulterError') {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Image must be 10 MB or smaller'
+      : err.message;
+    return res.status(400).json({ error: message });
+  }
+
+  // Errors with an intentional HTTP status (for example unsupported media)
+  if (Number.isInteger(err.statusCode) && err.statusCode >= 400 && err.statusCode < 600) {
+    if (err.statusCode >= 500) console.error(err);
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
   console.error(err);
   res.status(500).json({ error: 'Internal server error' });
 };

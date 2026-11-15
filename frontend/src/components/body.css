@@ -1,0 +1,139 @@
+.fashion-hero {
+    min-height: calc(100vh - 72px);
+    min-height: calc(100svh - 72px);
+    display: grid;
+    place-items: center;
+    background-color: #292421;
+    background-image: var(--fashion-image);
+    background-position: center 20%;
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    color: #fff;
+}
+
+.fashion-overlay {
+    position: relative;
+    isolation: isolate;
+    min-height: inherit;
+    width: 100%;
+    display: grid;
+    place-items: center;
+    padding: 48px 24px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.63);
+    text-align: center;
+}
+
+.fashion-overlay::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.45' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='.7'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+    content: '';
+    opacity: 0.3;
+    pointer-events: none;
+    animation: fashion-grain 150ms steps(3) infinite;
+}
+
+@keyframes fashion-grain {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 180px 180px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fashion-overlay::before {
+        animation: none;
+    }
+}
+
+.fashion-content {
+    max-width: 720px;
+}
+
+.fashion-eyebrow {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.fashion-content h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 8vw, 5.5rem);
+    line-height: 1.05;
+}
+
+.fashion-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.fashion-actions button {
+    min-width: 132px;
+    min-height: 48px;
+    padding: 0 24px;
+    border: 1px solid #fff;
+    border-radius: 999px;
+    background: #fff;
+    color: #242424;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.fashion-actions button + button {
+    background: transparent;
+    color: #fff;
+}
+
+.fashion-actions button:hover {
+    background: #e8e8e8;
+    color: #242424;
+}
+
+.fashion-actions button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+    .fashion-hero {
+        min-height: max(480px, calc(100svh - 148px));
+        background-position: center;
+        background-size: cover;
+    }
+
+    .fashion-overlay {
+        padding: 36px 22px;
+        background: rgb(0 0 0 / 52%);
+    }
+
+    .fashion-content h1 {
+        font-size: clamp(2.4rem, 12vw, 4rem);
+    }
+
+    .fashion-eyebrow {
+        font-size: 0.75rem;
+    }
+
+    .fashion-actions {
+        gap: 10px;
+        margin-top: 24px;
+    }
+
+    .fashion-actions button {
+        min-width: min(132px, calc(50vw - 32px));
+        min-height: 48px;
+        padding: 0 18px;
+    }
+}
