@@ -1,7 +1,7 @@
 # Local clothing analysis preview
 
 Open `/clothing-analysis` or use the **Analyze clothing** navigation link.
-Log in using the page's login button and an existing verified account. Use the camera or upload an image, then select **Analyze clothing**. The page displays attributes and the complete JSON response, with a JSON download button. Images go to the existing authenticated clothing-analysis endpoint; this page does not save wardrobe records.
+Log in using the page's login button and an existing verified account. Use the camera or upload an image, then select **Analyze clothing**. The page displays readable clothing attributes. Images go to the existing authenticated clothing-analysis endpoint; select **Save to wardrobe** after reviewing the result to persist its attributes for outfit generation. The photo itself is not stored. The save button confirms success and prevents repeat saves of that result.
 
 Use Node 22+ and the backend's configured `.env`. For the local setup below, ports 5001 and 5174 avoid other applications on 5000/5173.
 

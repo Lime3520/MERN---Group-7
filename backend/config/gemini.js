@@ -5,8 +5,8 @@ let geminiClient;
 // Keep the primary first; do not retry invalid requests, credentials, or quota errors.
 exports.generateWithFallback = async (ai, request) => {
   const models = [...new Set([
-    process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-    process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash'
+    process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
+    process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite'
   ])];
   for (let index = 0; index < models.length; index++) {
     try {

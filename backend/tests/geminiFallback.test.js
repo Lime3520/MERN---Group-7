@@ -9,7 +9,7 @@ test('primary model success makes only one request', async () => {
   const ai = { models: { generateContent: async (value) => { calls.push(value); return { text: '{}' }; } } };
   assert.deepEqual(await generateWithFallback(ai, request), { text: '{}' });
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].model, process.env.GEMINI_MODEL || 'gemini-3.8-flash');
+  assert.equal(calls[0].model, process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite');
   assert.equal(calls[0].config.httpOptions.retryOptions.attempts, 1);
   assert.equal(calls[0].config.httpOptions.timeout, 30000);
 });
@@ -23,7 +23,7 @@ test('overload switches models preserving image and JSON schema', async () => {
   } } };
   assert.equal((await generateWithFallback(ai, request)).text, '{"ok":true}');
   assert.equal(calls.length, 2);
-  assert.equal(calls[1].model, process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash');
+  assert.equal(calls[1].model, process.env.GEMINI_FALLBACK_MODEL || 'gemini-3.1-flash-lite');
   assert.deepEqual(calls[1].contents, request.contents);
   assert.deepEqual(calls[1].config.responseJsonSchema, request.config.responseJsonSchema);
 });

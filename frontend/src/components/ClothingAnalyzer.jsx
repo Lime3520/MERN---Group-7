@@ -10,6 +10,9 @@ export default function ClothingAnalyzer() {
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const saveInFlight = useRef(false);
     const [camera, setCamera] = useState(false);
     const [starting, setStarting] = useState(false);
     const [authMode, setAuthMode] = useState(null);
@@ -47,6 +50,7 @@ export default function ClothingAnalyzer() {
 
     function selectFile(next) {
         setResult(null);
+        setSaved(false);
         setError('');
         setFile(null);
         if (!next) return;
@@ -103,6 +107,7 @@ export default function ClothingAnalyzer() {
         setBusy(true);
         setError('');
         setResult(null);
+        setSaved(false);
         const controller = new AbortController();
         requestRef.current = controller;
         const timeout = setTimeout(() => controller.abort(), 90000);
@@ -134,13 +139,43 @@ export default function ClothingAnalyzer() {
         }
     }
 
-    function downloadJson() {
-        const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'clothing-analysis.json';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    async function saveToWardrobe() {
+        if (!result || saved || saveInFlight.current) return;
+        const token = sessionStorage.getItem('authToken');
+        if (!token) { setAuthMode('login'); return; }
+        saveInFlight.current = true;
+        setSaving(true);
+        setError('');
+        const controller = new AbortController();
+        requestRef.current = controller;
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try {
+            const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+            const response = await fetch(`${base}/clothing`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ analysis: result.analysis }),
+                signal: controller.signal,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 401) {
+                sessionStorage.removeItem('authToken');
+                setAuthMode('login');
+                throw new Error('Your session expired. Please log in again.');
+            }
+            if (!response.ok) throw new Error(data.error || 'Could not save this item.');
+            if (!data.item?._id) throw new Error('The server did not confirm the saved item.');
+            if (mounted.current) setSaved(true);
+        } catch (err) {
+            if (mounted.current) setError(err.name === 'AbortError' || err instanceof TypeError
+                ? 'Could not confirm the save. Check your wardrobe before trying again.'
+                : err.message);
+        } finally {
+            clearTimeout(timeout);
+            requestRef.current = null;
+            saveInFlight.current = false;
+            if (mounted.current) setSaving(false);
+        }
     }
 
     return (
@@ -148,35 +183,37 @@ export default function ClothingAnalyzer() {
             <p className="clothing-eyebrow">Fit’d / Your clothing</p>
             <h1>Get to know your clothes.</h1>
             <p>Photograph one item or upload a clear image to see its AI-generated details.</p>
-            <p className="clothing-note">Analysis preview only — this does not save clothing to your wardrobe. Your photo is sent to Gemini when you select Analyze.</p>
+            <p className="clothing-note">Your photo is sent to Gemini when you select Analyze. Review the details, then save the item to your wardrobe for outfit suggestions. Only the clothing details are saved.</p>
             {!signedIn && <p>Log in with your verified account to analyze photos. <button type="button" onClick={() => setAuthMode('login')}>Log in</button></p>}
             <div className="clothing-layout">
                 <section aria-labelledby="clothing-photo-title" className="clothing-panel">
                     <h2 id="clothing-photo-title">1. Choose a photo</h2>
                     <label className="clothing-file">Upload an image (up to 10 MB)
-                        <input type="file" accept={acceptedTypes.join(',')} disabled={busy || starting}
+                        <input type="file" accept={acceptedTypes.join(',')} disabled={busy || saving || starting}
                             onChange={(event) => { const next = event.target.files?.[0]; if (next) selectFile(next); event.target.value = ''; }} />
                     </label>
                     <div className="clothing-actions">
-                        {!camera && <button type="button" onClick={startCamera} disabled={busy || starting}>{starting ? 'Opening camera…' : 'Use camera'}</button>}
-                        {camera && <><button type="button" onClick={takePhoto}>Take photo</button><button type="button" onClick={stopCamera}>Stop camera</button></>}
+                        {!camera && <button type="button" onClick={startCamera} disabled={busy || saving || starting}>{starting ? 'Opening camera…' : 'Use camera'}</button>}
+                        {camera && <><button type="button" onClick={takePhoto} disabled={saving}>Take photo</button><button type="button" onClick={stopCamera}>Stop camera</button></>}
                     </div>
                     {camera ? <video ref={videoRef} autoPlay muted playsInline aria-label="Live camera preview" />
                         : preview ? <><img src={preview} alt="Selected clothing" onError={() => setError('This browser cannot preview this format. You can still analyze it, or choose a JPEG.')} /><p className="clothing-filename">{file.name}</p></>
                         : <div className="clothing-placeholder">Place one clothing item in good light against a simple background.</div>}
-                    <button className="clothing-primary" type="button" disabled={!file || busy || camera || starting} onClick={analyze}>{busy ? 'Analyzing…' : 'Analyze clothing'}</button>
+                    <button className="clothing-primary" type="button" disabled={!file || busy || saving || camera || starting} onClick={analyze}>{busy ? 'Analyzing…' : 'Analyze clothing'}</button>
                     {busy && <p role="status">Gemini is reviewing your photo. This may take a moment.</p>}
                     {error && <p role="alert" className="clothing-error">{error}</p>}
                 </section>
                 <section aria-labelledby="clothing-result-title" className="clothing-panel" aria-live="polite">
                     <h2 id="clothing-result-title">2. See the details</h2>
-                    {!result ? <p>Your clothing details and formatted JSON will appear here.</p> : <>
+                    {!result ? <p>Your clothing details will appear here.</p> : <>
                         <h3>{result.analysis.name}</h3>
                         <p>{result.analysis.description}</p>
                         <dl>{['category', 'subcategory', 'primaryColor', 'pattern', 'materials', 'fit', 'styleTags', 'seasons', 'occasions'].map((key) => <div key={key}><dt>{key.replace(/([A-Z])/g, ' $1')}</dt><dd>{Array.isArray(result.analysis[key]) ? result.analysis[key].join(', ') || 'None' : result.analysis[key]}</dd></div>)}</dl>
                         <p className="clothing-note">AI estimates may be incorrect, especially material and fit.</p>
-                        <details open><summary>View response JSON</summary><pre>{JSON.stringify(result, null, 2)}</pre></details>
-                        <button type="button" onClick={downloadJson}>Download JSON</button>
+                        <button className="clothing-primary" type="button" onClick={saveToWardrobe} disabled={saving || saved || camera}>
+                            {saving ? 'Saving…' : saved ? 'Saved to wardrobe' : 'Save to wardrobe'}
+                        </button>
+                        {saved && <p role="status">Saved. This item is now available for outfit generation.</p>}
                     </>}
                 </section>
             </div>

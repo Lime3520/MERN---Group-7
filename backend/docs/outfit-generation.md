@@ -6,20 +6,22 @@ No new packages or changes to authentication/clothing analysis are required.
 
 ## Database handoff
 
-There is no clothing model in this repository yet. The only database-specific code is in `services/wardrobeService.js`.
-Its temporary contract is collection **clothingitems**, with documents shaped as:
+`POST /api/clothing` saves an analyzed item; `GET /api/clothing` lists the authenticated user's items. Both require a Bearer JWT. Send `{ "analysis": ... }` using the full `analysis` object returned by `POST /api/clothing/analyze`. The save endpoint validates the analysis, rejects unknown fields and client-supplied ownership, and limits analysis data to 16 KB. It returns HTTP 201 with `{ item: { _id, analysis, createdAt } }`. Listing returns `{ items: [{ _id, analysis }] }`.
+
+`services/wardrobeService.js` reads and writes collection **clothingitems** directly:
 
 ```js
 {
   _id: ObjectId('...'),
-  userId: ObjectId('...'), // Matches the authenticated User._id; not a string.
-  analysis: { /* Full JSON from POST /api/clothing/analyze */ }
+  userId: ObjectId('...'), // From the verified JWT; never the request body.
+  analysis: { /* Full validated clothing attributes */ },
+  createdAt: Date
 }
 ```
 
-The database developer should adapt the collection name/query and map records to `{ _id, analysis }` if the final model differs. Preserve the user ownership filter. An index on `userId` is recommended when the collection is created. This endpoint does not create a model, collection, index, or seed records.
+Analysis remains a preview until the user selects **Save to wardrobe** on `/clothing-analysis`. Photos are not persisted. Each successful POST creates a new item; retries are not idempotent. The UI disables repeat saves after confirmation. If a response is lost, check `GET /api/clothing` before retrying.
 
-Clothing analysis alone does not save records, so analyzing an image is not enough to populate this endpoint's wardrobe. Until persistence is connected, an empty wardrobe returns 422. Items whose analysis fails the existing clothing validator are excluded. The initial limit is 200 stored items per wardrobe; larger wardrobes receive 422 rather than silently truncating. No database writes occur.
+Outfit generation automatically reads these saved records. An empty wardrobe returns 422. Items whose analysis fails validation are excluded. The existing generation/list limit is 200 stored items; larger wardrobes return 422 rather than silently truncating. Saving does not impose this limit. An index on `userId` is recommended for larger deployments. No migration or index creation is performed by this change.
 
 ## Requests
 
@@ -85,7 +87,7 @@ Errors: 400 invalid request, 401 missing/invalid authentication, 422 empty/unusa
 Run from `backend`:
 
 ```sh
-node --test tests/outfitGeneration.test.js
+node --test tests/*.test.js
 ```
 
 Tests use mocked Gemini and database access; no keys, database, or paid calls are needed. A live test requires MongoDB records matching the above contract, a verified account/login JWT, and the configured Gemini key/model. Review the live output against actual clothing before using it in a demo.

@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { analyzeClothingImage } = require('../controllers/clothingController');
+const { analyzeClothingImage, saveClothingItem, listClothingItems } = require('../controllers/clothingController');
 const { requireAuth } = require('../middleware/tokenAuth');
 
 const router = express.Router();
@@ -28,6 +28,8 @@ const upload = multer({
 });
 
 router.post('/analyze', requireAuth, upload.single('image'), analyzeClothingImage);
+router.post('/', requireAuth, saveClothingItem);
+router.get('/', requireAuth, listClothingItems);
 
 module.exports = router;
 
