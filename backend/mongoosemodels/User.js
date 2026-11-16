@@ -22,9 +22,17 @@ const userSchema = new mongoose.Schema({
     unique: true    // Prevents nearly simultaneous registration requests from creating dupes
   },
 
+  googleId: { // Stable identifier for accounts registered or linked through Google
+    type: String,
+    unique: true,
+    sparse: true
+  },
+
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return !this.googleId;
+    },
     select: false   // Hide passwords from query by default
   },
 
@@ -73,13 +81,15 @@ userSchema.index(
 
 // Hash the password before saving a new or changed password.
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return; // Skip hasing if password is unchanged
+  if (!this.isModified('password') || !this.password) return; // Skip hashing when unchanged or absent
 
   this.password = await bcrypt.hash(this.password, 12); // Else, hash
 });
 
 // Function to compare a submitted password against the stored password hash.
 userSchema.methods.checkPassword = async function (candidatePassword) {
+  if (!this.password) return false;
+
   return bcrypt.compare(candidatePassword, this.password);
 };
 

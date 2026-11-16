@@ -1,0 +1,20 @@
+# Port for the Node API server
+PORT=5000
+
+# Connection string for MongoDB (the host "mongodb" is the Docker Compose service name)
+MONGODB_URI=mongodb+srv://mern_backend:group_7@merngroup7.9hhrqhn.mongodb.net/
+
+# Secret used to sign login tokens. Use a long random value, for example the
+# output of:  node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+JWT_SECRET=9a3f564f91a066287aebe578e3beecf5b4e59da7431e266a09de373cb60a614c152446ae2ec37d11e38ac44db38e9fa3
+
+# How long a login lasts (examples: 15m, 1h, 7d)
+JWT_EXPIRES_IN=1h
+
+# RESEND (Email Sender) Info:
+RESEND_API_KEY=re_G56tESMA_2CgwQEqqpG8eLYDTYRtAi8DF
+
+EMAIL_FROM=no-reply@send.mern.matthewjugo.com
+
+# Frontend Stuff
+FRONTEND_URL=http://mern.matthewjugo.com

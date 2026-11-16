@@ -1,29 +1,31 @@
-# Outfit generation
+# Clothing upload and outfit generation
 
-`POST /api/outfits/generate` uses the existing Bearer JWT authentication.
-It reads the caller's wardrobe, makes one Gemini generation request, and returns recommendations without saving anything.
-No new packages or changes to authentication/clothing analysis are required.
+## Upload and persistence
 
-## Database handoff
+`POST /api/clothing/analyze` accepts one multipart image under `image`, analyzes it with Gemini, validates the response, and saves the original image and analysis to MongoDB. It returns `201` with the analysis and the new clothing record ID. A failed analysis is not saved.
 
-There is no clothing model in this repository yet. The only database-specific code is in `services/wardrobeService.js`.
-Its temporary contract is collection **clothingitems**, with documents shaped as:
+The authenticated user's records are stored in the `clothingitems` collection:
 
 ```js
 {
   _id: ObjectId('...'),
   userId: ObjectId('...'), // Matches the authenticated User._id; not a string.
-  analysis: { /* Full JSON from POST /api/clothing/analyze */ }
+  image: Buffer, // Original upload; maximum size is 10 MB.
+  mimeType: 'image/jpeg',
+  analysis: { /* Validated JSON from Gemini */ },
+  createdAt: Date
 }
 ```
 
-The database developer should adapt the collection name/query and map records to `{ _id, analysis }` if the final model differs. Preserve the user ownership filter. An index on `userId` is recommended when the collection is created. This endpoint does not create a model, collection, index, or seed records.
+Ownership always comes from the verified JWT, not a request parameter. `GET /api/clothing` lists the authenticated user's analyses and metadata. `GET /api/clothing/:id/image` returns an image only when that record belongs to the authenticated user. `services/wardrobeService.js` reads the same collection for outfit generation. An index on `userId` is recommended for production scale.
 
-Clothing analysis alone does not save records, so analyzing an image is not enough to populate this endpoint's wardrobe. Until persistence is connected, an empty wardrobe returns 422. Items whose analysis fails the existing clothing validator are excluded. The initial limit is 200 stored items per wardrobe; larger wardrobes receive 422 rather than silently truncating. No database writes occur.
+The initial limit is 200 stored items per wardrobe; larger wardrobes receive 422 rather than silently truncating. Photos are sent to Gemini for clothing analysis; outfit generation uses saved metadata and does not send images again.
 
-## Requests
+## Outfit suggestions
 
-Random everyday suggestions (an empty JSON object also uses these defaults):
+`POST /api/outfits/generate` uses Bearer-token authentication. It reads the caller's saved wardrobe, makes one Gemini generation request, and returns recommendations without saving them.
+
+Random everyday suggestions:
 
 ```json
 { "mode": "random", "count": 3 }
@@ -37,25 +39,21 @@ Specific suggestions:
   "prompt": "Outfits for an outdoor dinner date; avoid graphic shirts",
   "occasion": "date",
   "weather": "About 65 F and breezy",
-  "style": "smart casual",
+  "style": "professional",
   "count": 3
 }
 ```
 
-`mode` defaults to `random`. `count` defaults to 3 and accepts integers 3–5.
-`prompt` is required for `specific` and is limited to 1000 characters.
-`occasion`, `weather`, and `style` are optional strings, each limited to 200 characters.
-Preferences are also honored in random mode. Weather is user-supplied; this endpoint does not fetch forecasts.
-Unknown fields, including `userId` or caller-provided clothing IDs, are rejected.
+`mode` defaults to `random`. `count` defaults to 3 and accepts integers 3–5. `prompt` is required for `specific` and is limited to 1000 characters. `occasion` and `weather` are optional strings, each limited to 200 characters. `style` is optional and must be one of `professional`, `casual`, `2000s`, `streetwear`, `formal`, `minimalist`, `vintage`, or `sporty`. Presets are validated on the server for both random and specific requests. Preferences are also honored in random mode. Weather is user-supplied; this endpoint does not fetch forecasts. Unknown fields, including `userId` or caller-provided clothing IDs, are rejected.
 
 ```sh
 curl -X POST http://localhost:5000/api/outfits/generate \
-  -H 'Authorization: Bearer YOUR_LOGIN_TOKEN' \
+  -H 'Authorization: Bearer <login-token>' \
   -H 'Content-Type: application/json' \
-  -d '{"mode":"random","count":3}'
+  -d '{"mode":"random","style":"casual","count":3}'
 ```
 
-## Response
+## Response and validation
 
 Illustrative response when only one suitable combination exists:
 
@@ -72,20 +70,16 @@ Illustrative response when only one suitable combination exists:
 }
 ```
 
-IDs reference existing database clothing records; names/explanations are AI-generated. Clients can match IDs against their wardrobe data. Images are not sent to Gemini again. Compact metadata is used for styling and weather matching; the initial implementation lets Gemini evaluate those preferences rather than applying brittle hard filters.
+IDs reference existing database clothing records; names/explanations are AI-generated. Clients match IDs against wardrobe data to display saved photos. The server validates structure, result count, IDs belonging to the supplied wardrobe, repeated IDs within an outfit, and duplicate outfit combinations.
 
-The server validates structure, result count, IDs belonging to the supplied wardrobe, repeated IDs within an outfit, and duplicate outfit combinations. Items may appear in different outfits. Styling quality and fulfillment of natural-language preferences are AI judgments, not mechanically guaranteed.
-
-Fewer than the requested number is valid when accompanied by a message. If no suitable combinations exist, `outfits: []` plus a message is a successful 200 response. This avoids inventing clothing to fill the requested count. Random mode requests variety but does not guarantee different results on every call.
-
-Errors: 400 invalid request, 401 missing/invalid authentication, 422 empty/unusable or oversized wardrobe, 502 Gemini failure or invalid AI output. Existing server/database configuration errors retain the normal error-handler behavior.
+Fewer than the requested number is valid when accompanied by a message. If no suitable combinations exist, `outfits: []` plus a message is a successful 200 response. Errors: 400 invalid request, 401 missing/invalid authentication, 422 empty/unusable or oversized wardrobe, 502 Gemini failure or invalid AI output.
 
 ## Validation
 
 Run from `backend`:
 
 ```sh
-node --test tests/outfitGeneration.test.js
+node --test tests/clothingPersistence.test.js tests/outfitGeneration.test.js
 ```
 
-Tests use mocked Gemini and database access; no keys, database, or paid calls are needed. A live test requires MongoDB records matching the above contract, a verified account/login JWT, and the configured Gemini key/model. Review the live output against actual clothing before using it in a demo.
+Tests use mocked Gemini and database access; no keys, database, or paid calls are needed. A live test requires MongoDB, a verified account/login JWT, and the configured Gemini key/model.

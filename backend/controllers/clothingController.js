@@ -1,8 +1,9 @@
 const { getGeminiClient } = require('../config/gemini');
+const { saveClothingItem, getUserClothingItems, getUserClothingImage } = require('../services/clothingService');
 const { clothingAnalysisSchema, validateClothingAnalysis } = require('../utils/clothingAnalysis');
 
 // POST /api/clothing/analyze
-// Analyzes one uploaded garment image and returns metadata without saving it.
+// Analyzes and stores one garment image in the authenticated user's wardrobe.
 exports.analyzeClothingImage = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -58,9 +59,37 @@ exports.analyzeClothingImage = async (req, res, next) => {
       throw error;
     }
 
-    return res.status(200).json({ analysis });
+    const clothing = await saveClothingItem({
+      userId: req.userId,
+      image: req.file.buffer,
+      mimeType: req.file.mimetype,
+      analysis
+    });
+
+    return res.status(201).json({ analysis, clothing });
   } catch (error) {
     next(error);
   }
 };
 
+exports.listClothingItems = async (req, res, next) => {
+  try {
+    const items = await getUserClothingItems(req.userId);
+    return res.status(200).json({ items });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getClothingImage = async (req, res, next) => {
+  try {
+    const { image, mimeType } = await getUserClothingImage(req.userId, req.params.id);
+    return res
+      .set('Cache-Control', 'private, no-store')
+      .set('X-Content-Type-Options', 'nosniff')
+      .type(mimeType)
+      .send(image);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import TopNav from './components/topNav.jsx';
 import Body from './components/body.jsx';
 import BodyScanner from './components/BodyScanner.jsx';
+import CameraCapture from './components/CameraCapture.jsx';
 import './App.css';
 
 function App() {
     const currentPath = window.location.pathname;
     const isVerifyEmailPage = currentPath === '/verify-email';
+    const hasAuthToken = Boolean(sessionStorage.getItem('authToken'));
     const verificationStarted = useRef(false);
     const [verification, setVerification] = useState({
         status: 'loading',
@@ -65,6 +66,12 @@ function App() {
         verifyEmail();
     }, [isVerifyEmailPage]);
 
+    useEffect(() => {
+        if (currentPath === '/' && hasAuthToken) {
+            window.location.replace('/scanner');
+        }
+    }, [currentPath, hasAuthToken]);
+
     if (isVerifyEmailPage) {
         return (
             <main className="verification-page">
@@ -80,10 +87,17 @@ function App() {
         );
     }
 
+    if (currentPath === '/' && hasAuthToken) {
+        return null;
+    }
+
+    if (currentPath === '/camera') {
+        return hasAuthToken ? <CameraCapture /> : <Body />;
+    }
+
     if (currentPath === '/scanner' && !sessionStorage.getItem('authToken')) {
         return (
             <>
-                <TopNav initialAuthMode="login" />
                 <Body />
             </>
         );
@@ -92,7 +106,6 @@ function App() {
     if (currentPath === '/scanner') {
         return (
             <>
-                <TopNav />
                 <BodyScanner />
             </>
         );
@@ -100,7 +113,6 @@ function App() {
 
     return (
         <>
-            <TopNav />
             <Body />
         </>
     );

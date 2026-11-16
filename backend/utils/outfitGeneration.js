@@ -1,5 +1,10 @@
 const { validateClothingAnalysis } = require('./clothingAnalysis');
 
+const STYLE_PRESETS = [
+  'professional', 'casual', '2000s', 'streetwear',
+  'formal', 'minimalist', 'vintage', 'sporty'
+];
+
 const fail = (message, statusCode = 400) => {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -23,6 +28,9 @@ const parseOutfitRequest = (body = {}) => {
   }
 
   const request = { mode, count };
+  if (body.style !== undefined && !STYLE_PRESETS.includes(body.style)) {
+    fail(`style must be one of: ${STYLE_PRESETS.join(', ')}`);
+  }
   for (const key of ['prompt', 'occasion', 'weather', 'style']) {
     const value = body[key] === undefined ? '' : body[key];
     const limit = key === 'prompt' ? 1000 : 200;
@@ -104,4 +112,10 @@ const validateOutfitResponse = (value, wardrobe, count) => {
   return value;
 };
 
-module.exports = { parseOutfitRequest, compactWardrobe, outfitResponseSchema, validateOutfitResponse };
+module.exports = {
+  STYLE_PRESETS,
+  parseOutfitRequest,
+  compactWardrobe,
+  outfitResponseSchema,
+  validateOutfitResponse
+};

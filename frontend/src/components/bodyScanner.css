@@ -1,227 +1,369 @@
 .body-scanner-page {
-    min-height: calc(100vh - 72px);
-    padding: 32px 20px 56px;
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 104px 6vw 64px;
     box-sizing: border-box;
-    background: #f7f6f4;
+    background: #f5f4f1;
     color: #242424;
 }
 
-.body-scanner {
-    width: min(100%, 720px);
+.scanner-account {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    z-index: 1;
+}
+
+.scanner-account-trigger {
+    position: relative;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
+.scanner-account-trigger::after {
+    position: absolute;
+    right: 10px;
+    bottom: 3px;
+    left: 10px;
+    border-bottom: 1px solid currentColor;
+    content: '';
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 160ms ease-out;
+}
+
+.scanner-account-trigger:hover::after,
+.scanner-account-trigger:focus-visible::after {
+    transform: scaleX(1);
+}
+
+.scanner-account-trigger svg {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.scanner-account-trigger:focus-visible,
+.scanner-account-menu button:focus-visible {
+    outline: 2px solid #28578a;
+    outline-offset: 2px;
+}
+
+.scanner-account-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 140px;
+    padding: 6px;
+    border: 1px solid #dedede;
+    background: #fff;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.scanner-account-menu button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.scanner-account-menu button:hover {
+    background: #f0f0f0;
+}
+
+.closet {
+    width: min(100%, 1120px);
     margin: 0 auto;
 }
 
-.scanner-back-link {
-    color: inherit;
-    text-decoration: none;
+.closet-header {
+    margin-bottom: 32px;
 }
 
-.scanner-back-link:hover {
-    text-decoration: underline;
-}
-
-.scanner-eyebrow {
-    margin: 32px 0 8px;
-    color: #a51f2b;
-    font-size: 0.8rem;
+.closet-eyebrow {
+    margin: 0 0 8px;
+    color: #535353;
+    font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
 }
 
-.body-scanner h1 {
+.closet-header h1 {
     margin: 0;
-    font-size: clamp(2.25rem, 6vw, 3.5rem);
+    font-family: 'Cooper Hewitt-Bold', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: normal;
+    line-height: 1;
 }
 
-.scanner-intro {
-    max-width: 600px;
-    line-height: 1.6;
+.closet-description {
+    margin: 12px 0 0;
+    color: #666;
 }
 
-.scanner-privacy {
-    margin: 24px 0;
-    padding: 16px;
-    border-left: 4px solid #a51f2b;
+.wardrobe-error {
+    color: #9c2525;
+}
+
+.wardrobe-empty {
+    padding: 28px;
     background: #fff;
-    line-height: 1.5;
-}
-
-.scanner-height {
-    display: grid;
-    gap: 8px;
-    width: min(100%, 260px);
-    font-weight: 700;
-}
-
-.scanner-height-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.scanner-height-input input {
-    width: 100%;
-    min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid #bcbcbc;
-    border-radius: 6px;
-    box-sizing: border-box;
-    font: inherit;
-}
-
-.scanner-camera {
-    position: relative;
-    display: grid;
-    min-height: 260px;
-    margin-top: 20px;
-    overflow: hidden;
-    place-items: center;
-    border-radius: 12px;
-    background: #242424;
-    color: #fff;
-}
-
-.scanner-camera video {
-    display: none;
-    width: 100%;
-    max-height: 65vh;
-    object-fit: contain;
-    transform: scaleX(-1);
-}
-
-.scanner-camera.is-active video {
-    display: block;
-}
-
-.scanner-camera-placeholder {
-    padding: 24px;
+    color: #666;
     text-align: center;
 }
 
-.scanner-camera-placeholder span {
-    font-size: 2rem;
-}
-
-.scanner-status,
-.scanner-error {
-    line-height: 1.5;
-}
-
-.scanner-error {
-    color: #a51f2b;
-}
-
-.scanner-actions {
+.camera-launch {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.scanner-actions button {
-    min-height: 46px;
-    padding: 0 20px;
-    border: 0;
-    border-radius: 999px;
-    background: #a51f2b;
+    width: 104px;
+    height: 104px;
+    margin: 0 0 36px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid #242424;
+    border-radius: 50%;
+    background: #242424;
     color: #fff;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.scanner-actions button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.scanner-actions .scanner-secondary {
-    border: 1px solid #777;
-    background: transparent;
+.camera-launch:hover {
+    transform: translateY(-2px);
+    background: #fff;
     color: #242424;
 }
 
-.scanner-results {
-    margin-top: 28px;
-    padding: 20px;
-    border-radius: 12px;
+.camera-launch:focus-visible {
+    outline: 3px solid #28578a;
+    outline-offset: 4px;
+}
+
+.camera-launch svg {
+    width: 30px;
+    height: 30px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+}
+
+.camera-launch span {
+    font-size: 0.72rem;
+}
+
+.closet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 24px;
+}
+
+.closet-item {
+    min-width: 0;
+}
+
+.closet-item-image {
+    display: grid;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    place-items: center;
+    background: #e9e7e2;
+}
+
+.closet-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.closet-image-loading,
+.closet-image-error {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    color: #666;
+}
+
+.closet-image-loading {
+    background: linear-gradient(100deg, #e9e7e2 30%, #f5f4f1 45%, #e9e7e2 60%);
+    background-size: 200% 100%;
+    animation: closet-image-shimmer 1.4s linear infinite;
+}
+
+@keyframes closet-image-shimmer {
+    to {
+        background-position-x: -200%;
+    }
+}
+
+.closet-item-caption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 12px;
+}
+
+.closet-item-caption h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.closet-item-caption span {
+    color: #777;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+}
+
+.outfit-generator {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    margin-top: 64px;
+    padding: 28px;
     background: #fff;
 }
 
-.scanner-results h2 {
-    margin-top: 0;
+.outfit-generator h2 {
+    margin: 0;
+    font-family: 'Cooper Hewitt-Bold', sans-serif;
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    font-weight: normal;
 }
 
-.scanner-results dl {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-}
-
-.scanner-results dl div {
-    padding: 16px;
-    border-radius: 8px;
-    background: #f7f6f4;
-}
-
-.scanner-results dt {
-    font-size: 0.9rem;
-}
-
-.scanner-results dd {
+.outfit-generator > div:first-child > p:last-child {
     margin: 8px 0 0;
-    font-size: 1.5rem;
-    font-weight: 700;
+    color: #666;
 }
 
-.scanner-results > p {
-    margin-bottom: 0;
-    color: #555;
-    font-size: 0.9rem;
-    line-height: 1.5;
+.outfit-controls {
+    display: grid;
+    min-width: 190px;
+    align-content: center;
+    gap: 8px;
+}
+
+.outfit-controls label {
+    font-size: 0.85rem;
+}
+
+.outfit-controls select,
+.outfit-controls button {
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #242424;
+    border-radius: 0;
+    background: #fff;
+    color: #242424;
+    font: inherit;
+}
+
+.outfit-controls button {
+    background: #242424;
+    color: #fff;
+    cursor: pointer;
+}
+
+.outfit-controls button:hover:not(:disabled) {
+    background: #fff;
+    color: #242424;
+}
+
+.outfit-controls button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+.outfit-controls select:focus-visible,
+.outfit-controls button:focus-visible {
+    outline: 2px solid #28578a;
+    outline-offset: 3px;
+}
+
+.outfit-generator > .wardrobe-error,
+.outfit-results {
+    grid-column: 1 / -1;
+}
+
+.outfit-results > p {
+    color: #666;
+}
+
+.outfit-result {
+    padding: 18px 0;
+    border-top: 1px solid #dedede;
+}
+
+.outfit-result h3 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.outfit-result > p {
+    margin: 6px 0 14px;
+    color: #666;
+}
+
+.outfit-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.outfit-items img {
+    width: 78px;
+    height: 94px;
+    object-fit: cover;
+    background: #e9e7e2;
 }
 
 @media (max-width: 600px) {
     .body-scanner-page {
-        min-height: calc(100svh - 140px);
-        padding: 20px 16px 36px;
+        padding: 88px 20px 40px;
     }
 
-    .scanner-eyebrow {
-        margin-top: 24px;
+    .scanner-account {
+        top: 12px;
+        right: 12px;
     }
 
-    .scanner-privacy {
-        margin: 18px 0;
-        padding: 14px;
-        font-size: 0.92rem;
+    .closet-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px 12px;
     }
 
-    .scanner-height-input input {
-        font-size: 16px;
-    }
-
-    .scanner-camera {
-        min-height: 220px;
-        border-radius: 8px;
-    }
-
-    .scanner-camera video {
-        max-height: 55svh;
-    }
-
-    .scanner-actions {
-        display: grid;
+    .outfit-generator {
         grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 44px;
+        padding: 20px 16px;
     }
 
-    .scanner-actions button {
-        width: 100%;
-        min-height: 48px;
+    .outfit-controls {
+        min-width: 0;
     }
 
-    .scanner-results {
-        padding: 16px;
+    .closet-item-caption h2 {
+        font-size: 0.9rem;
     }
 }

@@ -4,6 +4,7 @@
 const User = require('../mongoosemodels/User');
 const validator = require('validator'); // Used to validate the REGEX format of emails
 const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login (Stay logged in)
+const { verifyGoogleIdToken } = require('../config/googleAuth');
 const { generateToken, hashToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
 const { sendEmail } = require('../config/email'); // Used to send emails to the user through the Resend Service
 const { verificationEmail, passwordResetEmail } = require('../utils/emailTemplates'); // Import the email template for verification email
@@ -338,3 +339,82 @@ exports.login = async (req, res, next) => {
         next(err); // Pass unexpected errors to the middleware/errorHandler
     }
 }
+
+// POST /api/auth/google
+exports.googleLogin = async (req, res, next) => {
+    try {
+        const { credential, idToken } = req.body || {};
+        const googleIdToken = credential || idToken;
+        if (typeof googleIdToken !== 'string' || !googleIdToken.trim() || googleIdToken.length > 8192) {
+            return res.status(400).json({ error: 'A valid Google credential is required' });
+        }
+
+        const googleUser = await verifyGoogleIdToken(googleIdToken);
+        if (
+            !googleUser ||
+            typeof googleUser.sub !== 'string' ||
+            !googleUser.sub.trim() ||
+            typeof googleUser.email !== 'string' ||
+            googleUser.email_verified !== true
+        ) {
+            return res.status(401).json({ error: 'Google account must have a verified email address' });
+        }
+
+        const email = googleUser.email.trim().toLowerCase();
+        if (!validator.isEmail(email) || email.length > 254) {
+            return res.status(401).json({ error: 'Google account returned an invalid email address' });
+        }
+
+        let user = await User.findOne({ googleId: googleUser.sub });
+
+        if (!user) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(409).json({
+                    error: 'An account with this email already exists. Sign in with that account first.'
+                });
+            }
+
+            const suppliedName = typeof googleUser.name === 'string' ? googleUser.name.trim() : '';
+            const username = (suppliedName || email.split('@')[0]).slice(0, 30);
+            try {
+                user = await User.create({
+                    username: username.length >= 2 ? username : 'Google User',
+                    email,
+                    googleId: googleUser.sub,
+                    emailVerified: true
+                });
+            } catch (error) {
+                if (error.code !== 11000) {
+                    throw error;
+                }
+
+                user = await User.findOne({ googleId: googleUser.sub });
+                if (!user) {
+                    const emailOwner = await User.findOne({ email });
+                    if (emailOwner) {
+                        return res.status(409).json({
+                            error: 'An account with this email already exists. Sign in with that account first.'
+                        });
+                    }
+
+                    throw error;
+                }
+            }
+        }
+
+        const token = createToken(user);
+        return res.status(200).json({
+            message: 'Google login successful',
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
