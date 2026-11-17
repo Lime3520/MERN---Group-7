@@ -4,7 +4,8 @@ const {
   analyzeClothingImage,
   listClothingItems,
   getClothingImage,
-  saveClothingMetadata
+  saveClothingMetadata,
+  deleteClothingItem
 } = require('../controllers/clothingController');
 const { requireAuth } = require('../middleware/tokenAuth');
 
@@ -35,6 +36,7 @@ const upload = multer({
 router.post('/', requireAuth, saveClothingMetadata);
 router.get('/', requireAuth, listClothingItems);
 router.get('/:id/image', requireAuth, getClothingImage);
+router.delete('/:id', requireAuth, deleteClothingItem);
 router.post('/analyze', requireAuth, upload.single('image'), analyzeClothingImage);
 
 module.exports = router;

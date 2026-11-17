@@ -78,6 +78,26 @@ exports.getUserClothingImage = async (userId, clothingId) => {
   return { image, mimeType: item.mimeType };
 };
 
+exports.deleteUserClothingItem = async (userId, clothingId) => {
+  const owner = getUserId(userId);
+  if (!isValidObjectId(clothingId)) {
+    const error = new Error('Invalid clothing item ID');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Check ownership in the delete itself so another user's record cannot be removed.
+  const result = await mongoose.connection.collection('clothingitems').deleteOne({
+    _id: new mongoose.Types.ObjectId(clothingId),
+    userId: owner
+  });
+  if (result.deletedCount === 0) {
+    const error = new Error('Clothing item not found');
+    error.statusCode = 404;
+    throw error;
+  }
+};
+
 const { getGeminiClient, generateWithFallback } = require('../config/gemini');
 const { clothingAnalysisSchema, validateClothingAnalysis } = require('../utils/clothingAnalysis');
 

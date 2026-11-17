@@ -1,5 +1,14 @@
-const { analyzeClothing, saveClothingItem, getUserClothingItems, getUserClothingImage } = require('../services/clothingService');
+const { analyzeClothing, saveClothingItem, getUserClothingItems, getUserClothingImage, deleteUserClothingItem } = require('../services/clothingService');
 const { saveWardrobeItem } = require('../services/wardrobeService');
+
+exports.deleteClothingItem = async (req, res, next) => {
+  try {
+    await deleteUserClothingItem(req.userId, req.params.id);
+    return res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
 
 // POST /api/clothing/analyze
 // Analyzes and stores one garment image in the authenticated user's wardrobe.

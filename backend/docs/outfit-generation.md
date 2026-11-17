@@ -21,6 +21,17 @@ Ownership always comes from the verified JWT, not a request parameter. `GET /api
 
 The initial limit is 200 stored items per wardrobe; larger wardrobes receive 422 rather than silently truncating. Photos are sent to Gemini for clothing analysis; outfit generation uses saved metadata and does not send images again.
 
+## Delete a clothing item
+
+`DELETE /api/clothing/:id` requires a Bearer token and deletes the entire clothing
+document (photo and analysis) only when its `userId` matches the authenticated user.
+No request body is needed. Returns `204` with no response body on success, `400`
+for an invalid item ID, `401` for missing/invalid authentication, and `404` for a
+missing item or an item owned by another user. Repeating a successful delete returns
+`404`. Future wardrobe reads and outfit requests exclude the deleted item.
+Clients should remove the item and clear any displayed suggestions containing it
+after a successful delete; do not parse the empty `204` response as JSON.
+
 ## Outfit suggestions
 
 `POST /api/outfits/generate` uses Bearer-token authentication. It reads the caller's saved wardrobe, calls Gemini with one fallback on transient failures, and returns recommendations without saving them.
