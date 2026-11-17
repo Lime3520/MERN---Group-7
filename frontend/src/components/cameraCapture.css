@@ -1,0 +1,199 @@
+.camera-page {
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 32px 24px 48px;
+    box-sizing: border-box;
+    background: #f5f4f1;
+    color: #242424;
+}
+
+.camera-header {
+    width: min(100%, 720px);
+    margin: 0 auto 28px;
+    text-align: center;
+}
+
+.camera-back-link {
+    display: inline-block;
+    margin-bottom: 32px;
+    color: inherit;
+    text-underline-offset: 4px;
+}
+
+.camera-back-link:focus-visible,
+.camera-retake:focus-visible {
+    outline: 2px solid #28578a;
+    outline-offset: 3px;
+}
+
+.camera-eyebrow {
+    margin: 0 0 8px;
+    color: #535353;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.camera-header h1 {
+    margin: 0;
+    font-family: 'Cooper Hewitt-Bold', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: normal;
+    line-height: 1;
+}
+
+.camera-header > p:last-child {
+    margin: 12px 0 0;
+    color: #666;
+}
+
+.camera-workspace {
+    width: min(100%, 720px);
+    margin: 0 auto;
+}
+
+.camera-viewfinder {
+    position: relative;
+    display: grid;
+    min-height: 240px;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    place-items: center;
+    background: #242424;
+}
+
+.camera-video,
+.camera-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.camera-overlay-message {
+    position: absolute;
+    inset: auto 16px;
+    margin: 0;
+    padding: 12px 16px;
+    background: rgb(0 0 0 / 72%);
+    color: #fff;
+    text-align: center;
+}
+
+.camera-controls {
+    display: flex;
+    min-height: 88px;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.camera-shutter {
+    width: 68px;
+    height: 68px;
+    padding: 0;
+    border: 5px solid #242424;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 6px #242424;
+    cursor: pointer;
+}
+
+.camera-shutter:hover {
+    background: #e8e8e8;
+}
+
+.camera-shutter:focus-visible {
+    outline: 3px solid #28578a;
+    outline-offset: 4px;
+}
+
+.camera-retake {
+    display: inline-block;
+    padding: 12px 20px;
+    border: 1px solid #242424;
+    background: #242424;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+
+.camera-retake:hover {
+    background: #fff;
+    color: #242424;
+}
+
+.camera-analysis {
+    padding: 24px;
+    background: #fff;
+}
+
+.camera-analysis-label {
+    margin: 0 0 8px;
+    color: #535353;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.camera-analysis h2 {
+    margin: 0;
+    font-family: 'Cooper Hewitt-Bold', sans-serif;
+    font-size: 1.6rem;
+    font-weight: normal;
+}
+
+.camera-analysis > p:not(.camera-analysis-label) {
+    color: #666;
+}
+
+.camera-analysis dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    margin: 20px 0 0;
+}
+
+.camera-analysis dl div {
+    min-width: 0;
+}
+
+.camera-analysis dt {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.camera-analysis dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .camera-page {
+        padding: 20px 16px 32px;
+    }
+
+    .camera-header {
+        margin-bottom: 20px;
+    }
+
+    .camera-back-link {
+        margin-bottom: 24px;
+    }
+
+    .camera-viewfinder {
+        min-height: 200px;
+    }
+
+    .camera-analysis {
+        padding: 20px 16px;
+    }
+}

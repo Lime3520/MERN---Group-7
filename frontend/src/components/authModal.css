@@ -1,12 +1,46 @@
 .auth-dialog {
+    position: relative;
+    isolation: isolate;
     width: min(420px, calc(100vw - 32px));
     max-width: none;
+    overflow: visible;
     padding: 0;
     border: 0;
-    border-radius: 16px;
-    background: #fff;
+    border-radius: 0;
+    background: transparent;
     color: #242424;
+}
+
+.auth-dialog::before,
+.auth-dialog::after {
+    position: absolute;
+    content: '';
+    pointer-events: none;
+}
+
+.auth-dialog::before {
+    z-index: -1;
+    inset: 0;
+    clip-path: url(#auth-modal-shape);
+    background: #CECECE;
     box-shadow: 0 18px 60px rgb(0 0 0 / 24%);
+}
+
+.auth-dialog::after {
+    z-index: -2;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: #1a3eca;
+    transform: translate(calc(-50% + 24px), calc(-50% + 20px));
+}
+
+.auth-shape-definitions {
+    position: fixed;
+    width: 0;
+    height: 0;
+    overflow: hidden;
 }
 
 .auth-dialog::backdrop {
@@ -16,6 +50,7 @@
 
 .auth-dialog-content {
     position: relative;
+    z-index: 0;
     padding: 36px;
 }
 
@@ -42,10 +77,16 @@
 }
 
 .auth-brand {
+    display: block;
+    width: 65px;
     margin: 0 0 12px;
-    color: #bf2634;
-    font-family: 'Cooper Hewitt-Bold', sans-serif;
-    font-size: 18px;
+}
+
+.auth-brand img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: brightness(0);
 }
 
 .auth-dialog h2 {
@@ -77,40 +118,79 @@
 .auth-form input {
     width: 100%;
     height: 46px;
-    padding: 0 12px;
-    border: 1px solid #c8c8c8;
-    border-radius: 8px;
-    background: #fff;
+    padding: 0 2px;
+    border: 0;
+    border-bottom: 1px solid #888;
+    border-radius: 0;
+    background: transparent;
     color: #242424;
     font: inherit;
     box-sizing: border-box;
 }
 
-.auth-form input:focus-visible {
-    border-color: #bf2634;
-    outline: 2px solid #bf2634;
-    outline-offset: 1px;
+.auth-form input::placeholder {
+    color: #242424;
+    opacity: 0.5;
 }
 
-.auth-submit {
-    min-height: 46px;
-    margin-top: 4px;
+.auth-form input:focus-visible {
+    border-bottom-color: #242424;
+    outline: none;
+}
+
+.auth-submit-control {
+    position: relative;
+    display: grid;
+    width: min(100%, 200px);
+    aspect-ratio: 328 / 123;
+    margin: 4px auto 0;
+}
+
+.auth-submit-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transition: transform 180ms ease-out;
+}
+
+.auth-submit-control:active .auth-submit-frame {
+    transform: translateY(4px);
+}
+
+.auth-submit-bottom {
+    transform-box: view-box;
+    transition: transform 300ms cubic-bezier(0.2, 0.75, 0.3, 1);
+}
+
+.auth-submit-control:active .auth-submit-bottom {
+    transform: translateY(-22px);
+}
+
+.auth-submit-button {
+    z-index: 1;
+    width: 100%;
+    height: 82%;
+    padding: 0;
     border: 0;
-    border-radius: 24px;
-    background: #bf2634;
+    background: transparent;
     color: #fff;
     cursor: pointer;
     font: inherit;
     font-weight: 600;
+    place-self: start center;
 }
 
-.auth-submit:disabled {
+.auth-submit-button:disabled {
     cursor: wait;
     opacity: 0.7;
 }
 
-.auth-submit:hover {
-    background: #a91e2b;
+.auth-submit-button:focus-visible {
+    outline: 2px solid #686868;
+    outline-offset: 1px;
+    border-radius: 999px;
 }
 
 .auth-feedback {
@@ -138,20 +218,32 @@
     padding: 0;
     border: 0;
     background: none;
-    color: #bf2634;
+    color: #1a3eca;
     cursor: pointer;
     font: inherit;
     font-weight: 600;
     text-decoration: underline;
 }
 
+.auth-switch button:hover {
+    color: #28578a;
+}
+
+.auth-switch button:focus-visible {
+    outline: 2px solid #28578a;
+    outline-offset: 2px;
+}
+
 @media (max-width: 480px) {
     .auth-dialog {
         width: calc(100vw - 24px);
+    }
+
+    .auth-dialog-content {
         max-height: calc(100dvh - 24px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        border-radius: 14px;
+        box-sizing: border-box;
     }
 
     .auth-dialog-content {
@@ -167,7 +259,19 @@
     }
 
     .auth-form input,
-    .auth-submit {
+    .auth-submit-button {
         min-height: 48px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-submit-frame,
+    .auth-submit-bottom {
+        transition: none;
+    }
+
+    .auth-submit-control:active .auth-submit-frame,
+    .auth-submit-control:active .auth-submit-bottom {
+        transform: none;
     }
 }

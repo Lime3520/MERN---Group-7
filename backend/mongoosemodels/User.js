@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     maxlength: 30
   },
 
-  email: { // Normalized emails
+  email: { // Normalize emails
     type: String,
     required: true,
     trim: true,
@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     unique: true    // Prevents nearly simultaneous registration requests from creating dupes
   },
 
-  googleId: { // For the Google registration/login option, Stable Identifier
+  googleId: { // Stable identifier for accounts registered or linked through Google
     type: String,
     unique: true,
     sparse: true
@@ -30,11 +30,11 @@ const userSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: function () { // Only require password for account IF they do not link through Google
-        return !this.googleId;
+    required: function () {
+      return !this.googleId;
     },
-    select: false // Hide passwords from queries by default
-},
+    select: false   // Hide passwords from query by default
+  },
 
   emailVerified: { // Account has or has not been verified by email by the user after creation
   type: Boolean,
@@ -79,13 +79,10 @@ userSchema.index(
   }
 );
 
-
-
 // Hash the password before saving a new or changed password.
 userSchema.pre('save', async function () {
-  if (!this.isModified('password') || !this.password) return; // Skip hasing if password is unchanged
+  if (!this.isModified('password') || !this.password) return; // Skip hashing when unchanged or absent
 
-  // Else,
   this.password = await bcrypt.hash(this.password, 12); // Else, hash
 });
 
@@ -93,7 +90,6 @@ userSchema.pre('save', async function () {
 userSchema.methods.checkPassword = async function (candidatePassword) {
   if (!this.password) return false;
 
-  // Else,
   return bcrypt.compare(candidatePassword, this.password);
 };
 

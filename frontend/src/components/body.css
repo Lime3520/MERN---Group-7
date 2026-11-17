@@ -1,18 +1,59 @@
 .fashion-hero {
-    min-height: calc(100vh - 72px);
-    min-height: calc(100svh - 72px);
+    position: relative;
+    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100svh;
     display: grid;
     place-items: center;
     background-color: #292421;
+    color: #fff;
+}
+
+.fashion-background {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.fashion-background-image {
+    position: absolute;
+    inset: 0;
     background-image: var(--fashion-image);
     background-position: center 20%;
     background-repeat: no-repeat;
-    background-size: 100% auto;
-    color: #fff;
+    background-size: cover;
+    filter: grayscale(100%);
+    opacity: 0;
+    transform: scale(1);
+    animation: fashion-slide 20s linear infinite both;
+}
+
+@keyframes fashion-slide {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    19.999999% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    20% {
+        opacity: 0;
+        transform: scale(1.15);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.15);
+    }
 }
 
 .fashion-overlay {
     position: relative;
+    z-index: 1;
     isolation: isolate;
     min-height: inherit;
     width: 100%;
@@ -28,10 +69,11 @@
     position: absolute;
     z-index: -1;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.45' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='.7'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='.3 .3 .3 0 .66 .3 .3 .3 0 .64 .3 .3 .3 0 .58 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
     background-size: 180px 180px;
     content: '';
-    opacity: 0.3;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
     pointer-events: none;
     animation: fashion-grain 150ms steps(3) infinite;
 }
@@ -47,13 +89,66 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .fashion-background-image {
+        animation: none;
+    }
+
+    .fashion-logo {
+        filter: none;
+    }
+
+    .fashion-line-boil-animation {
+        display: none;
+    }
+
+    .fashion-logo {
+        animation: none;
+    }
+
+    .fashion-background-image:first-child {
+        opacity: 1;
+    }
+
     .fashion-overlay::before {
         animation: none;
+    }
+
+    .fashion-actions-frame,
+    .fashion-actions-bottom {
+        transition: none;
+    }
+
+    .fashion-actions:active .fashion-actions-frame,
+    .fashion-actions:active .fashion-actions-bottom {
+        transform: none;
     }
 }
 
 .fashion-content {
     max-width: 720px;
+}
+
+.fashion-logo {
+    display: block;
+    width: min(100%, 480px);
+    height: auto;
+    margin: 0 auto;
+    filter: url(#fashion-line-boil);
+}
+
+.fashion-team-graphic {
+    display: block;
+    width: min(100%, 120px);
+    height: auto;
+    margin: 0 auto 12px;
+    transform: translateY(-24pt)
+}
+
+.fashion-svg-filters {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
 }
 
 .fashion-eyebrow {
@@ -71,48 +166,82 @@
 }
 
 .fashion-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 32px;
+    position: relative;
+    display: grid;
+    width: min(100%, 200px);
+    aspect-ratio: 328 / 123;
+    margin: 32px auto 0;
 }
 
-.fashion-actions button {
-    min-width: 132px;
-    min-height: 48px;
-    padding: 0 24px;
-    border: 1px solid #fff;
-    border-radius: 999px;
-    background: #fff;
-    color: #242424;
+.fashion-actions-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transition: transform 180ms ease-out;
+}
+
+.fashion-actions:active .fashion-actions-frame {
+    transform: translateY(4px);
+}
+
+.fashion-actions-bottom {
+    transform-box: view-box;
+    transition: transform 300ms cubic-bezier(0.2, 0.75, 0.3, 1);
+}
+
+.fashion-actions:active .fashion-actions-bottom {
+    transform: translateY(-22px);
+}
+
+.fashion-action-button {
+    z-index: 1;
+    width: 100%;
+    height: 82%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
     cursor: pointer;
     font: inherit;
     font-weight: 700;
+    place-self: start center;
 }
 
-.fashion-actions button + button {
-    background: transparent;
-    color: #fff;
+.fashion-action-button:hover {
+    color: #e8e8e8;
 }
 
-.fashion-actions button:hover {
-    background: #e8e8e8;
-    color: #242424;
-}
-
-.fashion-actions button:focus-visible {
+.fashion-action-button:focus-visible {
     outline: 3px solid #fff;
     outline-offset: 3px;
+    border-radius: 999px;
+}
+
+.fashion-signup-link {
+    display: block;
+    margin: 8px auto 0;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.fashion-signup-link:hover {
+    color: #e8e8e8;
+}
+
+.fashion-signup-link:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
 }
 
 @media (max-width: 600px) {
-    .fashion-hero {
-        min-height: max(480px, calc(100svh - 148px));
-        background-position: center;
-        background-size: cover;
-    }
-
     .fashion-overlay {
         padding: 36px 22px;
         background: rgb(0 0 0 / 52%);
@@ -127,13 +256,6 @@
     }
 
     .fashion-actions {
-        gap: 10px;
         margin-top: 24px;
-    }
-
-    .fashion-actions button {
-        min-width: min(132px, calc(50vw - 32px));
-        min-height: 48px;
-        padding: 0 18px;
     }
 }

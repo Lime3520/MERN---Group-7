@@ -96,7 +96,7 @@ test('HTTP save/list require authentication and use the JWT owner', async () => 
     assert.match(saved._id, /^[a-f\d]{24}$/);
     assert.equal(records[0].userId.toHexString(), owner);
     const ownItems = await (await fetch(url, { headers })).json();
-    assert.equal(ownItems.items[0]._id, saved._id);
+    assert.equal(ownItems.items[0].id, saved._id);
     const others = await (await fetch(url, { headers: { Authorization: `Bearer ${createToken({ _id: other })}` } })).json();
     assert.deepEqual(others.items, []);
   } finally {

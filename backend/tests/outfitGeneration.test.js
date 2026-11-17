@@ -1,7 +1,12 @@
 const { test, mock } = require('node:test');
 const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
-const { parseOutfitRequest, compactWardrobe, validateOutfitResponse } = require('../utils/outfitGeneration');
+const {
+  STYLE_PRESETS,
+  parseOutfitRequest,
+  compactWardrobe,
+  validateOutfitResponse
+} = require('../utils/outfitGeneration');
 const { generateOutfits } = require('../services/outfitService');
 const { getUserWardrobe } = require('../services/wardrobeService');
 
@@ -27,12 +32,20 @@ test('requests support random defaults and specific preferences', () => {
   assert.deepEqual(parseOutfitRequest({ mode: 'specific', prompt: '  Dinner date  ', count: 5, weather: 'Cool' }), {
     mode: 'specific', prompt: 'Dinner date', count: 5, weather: 'Cool', occasion: '', style: ''
   });
+  assert.deepEqual(STYLE_PRESETS, [
+    'professional', 'casual', '2000s', 'streetwear',
+    'formal', 'minimalist', 'vintage', 'sporty'
+  ]);
+  assert.equal(parseOutfitRequest({ style: 'professional' }).style, 'professional');
 });
 
 test('requests reject invalid input and caller-supplied ownership', () => {
   for (const body of [null, [], { mode: 'other' }, { mode: 'specific' }, { count: 6 },
     { count: '3' }, { weather: {} }, { prompt: 'x'.repeat(1001) }, { userId: 'another-user' }]) {
     assert.throws(() => parseOutfitRequest(body), { statusCode: 400 });
+  }
+  for (const style of ['smart casual', 'unlisted', {}]) {
+    assert.throws(() => parseOutfitRequest({ style }), { statusCode: 400 });
   }
 });
 

@@ -6,12 +6,14 @@ const express = require('express');
 const router = express.Router();
 
 // import registration logic function from controller
-const { register, 
-        verifyEmail, 
-        forgotPassword, 
-        resetPassword, 
-        login,
-        googleLogin } = require('../controllers/authController'); 
+const {
+  register,
+  verifyEmail,
+  forgotPassword,
+  resetPassword,
+  login,
+  googleLogin
+} = require('../controllers/authController');
 
 // POST /api/auth/register
 router.post('/register', register);

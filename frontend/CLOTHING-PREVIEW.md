@@ -1,32 +1,28 @@
-# Local clothing analysis preview
+# Local wardrobe and outfit UI
 
-Open `/clothing-analysis` or use the **Analyze clothing** navigation link.
-Log in using the page's login button and an existing verified account. Use the camera or upload an image, then select **Analyze clothing**. The page displays readable clothing attributes. Images go to the existing authenticated clothing-analysis endpoint; select **Save to wardrobe** after reviewing the result to persist its attributes for outfit generation. The photo itself is not stored. The save button confirms success and prevents repeat saves of that result.
+The frontend branch's automatic-save camera flow replaces the old analysis preview.
+Log in, open `/camera`, and take a photo. A successful analysis saves the photo and
+its attributes. Return to `/scanner` (My Closet), choose a style, and generate outfits.
+Old `/clothing-analysis` bookmarks open the camera page. Metadata-only records saved
+before this merge still work for outfits but have no photo thumbnail.
 
-Use Node 22+ and the backend's configured `.env`. For the local setup below, ports 5001 and 5174 avoid other applications on 5000/5173.
-
-Backend terminal:
+Use Node 22+. From `backend`, run:
 
 ```sh
-cd backend
-PORT=5001 node server.js
+PORT=5001 npm start
 ```
 
-Frontend terminal:
+From `frontend`, run:
 
 ```sh
-cd frontend
 VITE_API_BASE_URL=/api VITE_API_PROXY_TARGET=http://127.0.0.1:5001 npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
 ```
 
-Visit http://127.0.0.1:5174/clothing-analysis. These process-level settings leave the team's default proxy unchanged. Login tokens are specific to the backend that issued them; log in again if an old token is rejected.
+Open http://127.0.0.1:5174. The explicit proxy target uses your local backend.
+Camera access requires localhost or HTTPS and browser permission. Signups depend on
+the backend's email configuration; an existing verified account can log in directly.
+Restart the backend after changing its private `.env` configuration.
 
-Camera access works on localhost with browser permission. A phone accessing a computer's plain HTTP LAN address may require HTTPS for camera access; uploading a photo remains available. HEIC/HEIF previews depend on browser support; JPEG works most consistently.
-
-New signups still depend on the team's verification-email configuration. This feature does not bypass authentication or email verification.
-
-The separate analyzer component and its scoped CSS contain most of the change. The existing body scanner is unchanged. AuthModal accepts an optional redirect destination and still defaults to `/scanner` for existing callers.
-
-The current repository tracks frontend/node_modules. A local dependency install can therefore show generated dependency changes in Git. Keep them out of the feature commit; dependency-tracking cleanup should be coordinated separately with the team.
-
-Verification performed: production build, frontend HTTP response, proxied authentication health route, and rejection of an unauthenticated analysis request. Live camera capture and authenticated Gemini image analysis require manual verification.
+Environment copies, node_modules, and dist are ignored. Never commit real credentials.
+Automated backend tests use mocked database/Gemini responses; a live camera, database,
+and AI round trip still requires manual validation.

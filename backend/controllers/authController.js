@@ -4,12 +4,10 @@
 const User = require('../mongoosemodels/User');
 const validator = require('validator'); // Used to validate the REGEX format of emails
 const { createToken } = require('../middleware/tokenAuth'); // Used to create and validate authenticated session tokens after successful login (Stay logged in)
+const { verifyGoogleIdToken } = require('../config/googleAuth');
 const { generateToken, hashToken } = require('../utils/tokenUtils'); // Used to generate tokens and hashed tokens for general usage (Email verification/Password Resets)
 const { sendEmail } = require('../config/email'); // Used to send emails to the user through the Resend Service
 const { verificationEmail, passwordResetEmail } = require('../utils/emailTemplates'); // Import the email template for verification email
-const { OAuth2Client } = require('google-auth-library');
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
@@ -342,135 +340,70 @@ exports.login = async (req, res, next) => {
     }
 }
 
-
-
-
-
-
 // POST /api/auth/google
 exports.googleLogin = async (req, res, next) => {
     try {
-        const { credential } = req.body || {};
-
-        // CHECK: Ensure a Google credential was provided.
-        if (typeof credential !== 'string' || !credential) {
-            return res.status(400).json({
-                error: 'Google credential is required'
-            });
+        const { credential, idToken } = req.body || {};
+        const googleIdToken = credential || idToken;
+        if (typeof googleIdToken !== 'string' || !googleIdToken.trim() || googleIdToken.length > 8192) {
+            return res.status(400).json({ error: 'A valid Google credential is required' });
         }
 
-        // Verify Google's ID token.
-        let payload;
-
-        try {
-            const ticket = await googleClient.verifyIdToken({
-                idToken: credential,
-                audience: process.env.GOOGLE_CLIENT_ID
-            });
-
-            payload = ticket.getPayload();
-
-        } catch (err) {
-            // Invalid, expired, or incorrectly issued token.
-            return res.status(401).json({
-                error: 'Invalid or expired Google credential'
-            });
-        }
-
-        // Extract verified Google account information.
-        const googleId = payload?.sub;
-        const email = payload?.email;
-        
-        // CHECK: Validate required Google claims.
+        const googleUser = await verifyGoogleIdToken(googleIdToken);
         if (
-            typeof googleId !== 'string' ||
-            typeof email !== 'string' ||
-            payload.email_verified !== true
+            !googleUser ||
+            typeof googleUser.sub !== 'string' ||
+            !googleUser.sub.trim() ||
+            typeof googleUser.email !== 'string' ||
+            googleUser.email_verified !== true
         ) {
-            return res.status(401).json({
-                error: 'Google account must have a verified email'
-            });
+            return res.status(401).json({ error: 'Google account must have a verified email address' });
         }
 
-        // Normalize and validate email.
-        const normalizedEmail = email.trim().toLowerCase();
-
-        if (!validator.isEmail(normalizedEmail)) {
-            return res.status(401).json({
-                error: 'Invalid Google account email'
-            });
+        const email = googleUser.email.trim().toLowerCase();
+        if (!validator.isEmail(email) || email.length > 254) {
+            return res.status(401).json({ error: 'Google account returned an invalid email address' });
         }
 
-        // 1. Check whether this Google account already exists.
-        let user = await User.findOne({ googleId });
+        let user = await User.findOne({ googleId: googleUser.sub });
 
-        // 2. If it doesn't exist, check whether the email
-        // already belongs to a traditional account.
         if (!user) {
-
-            const existingUser = await User.findOne({
-                email: normalizedEmail
-            });
-
-            // Never automatically merge accounts.
+            const existingUser = await User.findOne({ email });
             if (existingUser) {
                 return res.status(409).json({
-                    error: 'An account with this email already exists. Please log in using your existing credentials.'
+                    error: 'An account with this email already exists. Sign in with that account first.'
                 });
             }
 
-            // Generate a username using Google's profile name.
-            let username = (payload.name || normalizedEmail.split('@')[0])
-                .trim()
-                .slice(0, 30);
-
-            if (username.length < 2) {
-                username = 'Google User';
-            }
-
-            // 3. Create the new Google account.
+            const suppliedName = typeof googleUser.name === 'string' ? googleUser.name.trim() : '';
+            const username = (suppliedName || email.split('@')[0]).slice(0, 30);
             try {
                 user = await User.create({
-                    username,
-                    email: normalizedEmail,
-                    googleId,
+                    username: username.length >= 2 ? username : 'Google User',
+                    email,
+                    googleId: googleUser.sub,
                     emailVerified: true
                 });
-
-            } catch (err) {
-
-                // Handle simultaneous account creation.
-                if (err.code !== 11000) {
-                    throw err;
+            } catch (error) {
+                if (error.code !== 11000) {
+                    throw error;
                 }
 
-                // Another request may have created this Google account.
-                user = await User.findOne({ googleId });
-
+                user = await User.findOne({ googleId: googleUser.sub });
                 if (!user) {
-
-                    // Alternatively, a traditional account may have
-                    // been created using this email in the meantime.
-                    const emailOwner = await User.findOne({
-                        email: normalizedEmail
-                    });
-
+                    const emailOwner = await User.findOne({ email });
                     if (emailOwner) {
                         return res.status(409).json({
-                            error: 'An account with this email already exists. Please log in using your existing credentials.'
+                            error: 'An account with this email already exists. Sign in with that account first.'
                         });
                     }
 
-                    // Unexpected duplicate-key error.
-                    throw err;
+                    throw error;
                 }
             }
         }
 
-        // 4. Generate YOUR application's JWT.
         const token = createToken(user);
-
-        // 5. Return the authenticated session.
         return res.status(200).json({
             message: 'Google login successful',
             token,
@@ -481,8 +414,7 @@ exports.googleLogin = async (req, res, next) => {
                 createdAt: user.createdAt
             }
         });
-
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
